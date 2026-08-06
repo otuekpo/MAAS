@@ -1,0 +1,26 @@
+FROM node:20 AS builder
+
+WORKDIR /usr/src/app
+
+COPY package*.json nest-cli.json tsconfig*.json ./
+
+COPY apps/injestion ./apps/injestion
+COPY libs/database ./libs/database
+COPY libs/shared ./libs/shared
+
+RUN npm ci
+
+RUN npx nest build injestion
+
+FROM node:20-slim AS production
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY --from=builder /usr/src/app/dist ./dist
+
+EXPOSE 3001
+
+CMD ["node", "dist/apps/injestion/main.js"]

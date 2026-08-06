@@ -1,0 +1,7 @@
+node_modules
+dist
+.env
+.git
+mongo-data
+pg-data
+.opencode.json

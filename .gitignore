@@ -1,0 +1,6 @@
+mongo-data
+pg-data
+*.md
+configdb
+mongot
+.opencode.json

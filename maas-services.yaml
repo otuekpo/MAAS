@@ -1,0 +1,132 @@
+services:
+
+  # POSTGRES
+  postgres:
+    image: "postgres:latest" #18
+    networks:
+      - maas
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: default_database
+    volumes:
+      - ./pg-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U username -d default_database"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # MONGODB
+  mongodb:
+      image: mongodb/mongodb-atlas-local
+      networks:
+        - maas
+      hostname: mongodb
+      environment:
+        - MONGODB_INITDB_ROOT_USERNAME=user
+        - MONGODB_INITDB_ROOT_PASSWORD=pass
+      ports:
+        - 27017:27017
+      volumes:
+        - ./init:/docker-entrypoint-initdb.d
+        - mongodb_data:/data/db
+        - mongodb_configdb:/data/configdb
+        - mongodb_mongot:/data/mongot
+      healthcheck:
+        test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+
+
+  # MONGODB CLIENT
+  mongo-express:
+    container_name: mongo-express
+    image: mongo-express
+    networks:
+      - maas
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=password
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=password
+    ports:
+      - '8081:8081'
+    volumes:
+      - ./mongo-data:/data/db
+
+  # REDIS
+  redis:
+    image: redis:7-alpine
+    networks:
+      - maas
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # MAAS SERVER
+  maas-server:
+    build:
+      context: ./maas-server
+      dockerfile: Dockerfile
+    networks:
+      - maas
+    ports:
+      - "4081:4081"
+    environment:
+      DATABASE_URL: postgresql://username:password@postgres:5432/default_database
+      MONGODB_URI: mongodb://user:pass@mongodb:27017/?authSource=admin    
+      REDIS_URL: redis://redis:6379/15  
+    env_file:
+      - ./maas-server/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # INJESTION SERVICE
+  injestion:
+    build:
+      context: ./maas-server
+      dockerfile: Dockerfile.injestion
+    networks:
+      - maas
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://username:password@postgres:5432/default_database
+      MONGODB_URI: mongodb://user:pass@mongodb:27017/?authSource=admin
+      REDIS_URL: redis://redis:6379/15
+    env_file:
+      - ./maas-server/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+  mongodb_configdb:
+  mongodb_mongot:
+  # configdb:
+  # mongot:
+  pg-data:
+
+networks:
+  maas:
+    driver: bridge

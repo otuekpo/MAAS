@@ -1,0 +1,83 @@
+<div style="font-family: var(--font-sans); padding: 1rem 0;">
+
+  <!-- Top navbar -->
+  <div style="display:flex; justify-content:space-between; align-items:center; border:0.5px solid var(--border); padding:12px 16px; margin-bottom:12px;">
+    <div style="font-size:13px; font-weight:500;">Logo</div>
+    <div style="display:flex; gap:16px; font-size:12px; color:var(--text-secondary);">
+      <span>Search</span><span>Notifications</span><span>Avatar</span>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:160px 1fr; gap:12px;">
+
+    <!-- Sidebar -->
+    <div style="border:0.5px solid var(--border); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:8px; height:fit-content;">
+      <div style="background:var(--surface-1); border-radius:8px; padding:8px 12px; font-size:12px; font-weight:500;">Trips</div>
+      <div style="padding:8px 12px; font-size:12px; color:var(--text-secondary);">Profile</div>
+      <div style="margin-top:24px; padding:8px 12px; font-size:12px; color:var(--text-secondary); border-top:0.5px solid var(--border); padding-top:16px;">Log out</div>
+    </div>
+
+    <!-- Main content -->
+    <div>
+      <!-- Header row -->
+      <div style="display:flex; justify-content:space-between; align-items:center; border:0.5px solid var(--border); padding:16px; margin-bottom:12px;">
+        <div style="font-size:16px; font-weight:500;">Heading: "Trips"</div>
+        <div style="border:0.5px solid var(--border-strong); padding:8px 20px; font-size:13px; color:var(--text-secondary);">New trip</div>
+      </div>
+
+      <!-- Card grid -->
+      <div style="display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; margin-bottom:12px;">
+        <div style="border:0.5px solid var(--border); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:8px;">
+          <div style="font-size:13px; font-weight:500;">Trip name</div>
+          <div style="font-size:12px; color:var(--text-secondary);">Destination + dates</div>
+          <div style="font-size:11px; color:var(--text-muted);">Status</div>
+          <div style="display:flex; gap:12px; font-size:12px; text-decoration:underline; margin-top:8px;">
+            <span>Edit</span><span>Delete</span>
+          </div>
+        </div>
+        <div style="border:0.5px solid var(--border); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:8px;">
+          <div style="font-size:13px; font-weight:500;">Trip name</div>
+          <div style="font-size:12px; color:var(--text-secondary);">Destination + dates</div>
+          <div style="font-size:11px; color:var(--text-muted);">Status</div>
+          <div style="display:flex; gap:12px; font-size:12px; text-decoration:underline; margin-top:8px;">
+            <span>Edit</span><span>Delete</span>
+          </div>
+        </div>
+        <div style="border:0.5px solid var(--border); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:8px;">
+          <div style="font-size:13px; font-weight:500;">Trip name</div>
+          <div style="font-size:12px; color:var(--text-secondary);">Destination + dates</div>
+          <div style="font-size:11px; color:var(--text-muted);">Status</div>
+          <div style="display:flex; gap:12px; font-size:12px; text-decoration:underline; margin-top:8px;">
+            <span>Edit</span><span>Delete</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form panel -->
+      <div style="border:0.5px dashed var(--border-strong); border-radius:12px; padding:20px; margin-bottom:12px;">
+        <div style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">Create / edit form (panel or modal)</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+          <div style="border:0.5px solid var(--border); border-radius:8px; padding:8px; font-size:12px; color:var(--text-muted);">Trip name</div>
+          <div style="border:0.5px solid var(--border); border-radius:8px; padding:8px; font-size:12px; color:var(--text-muted);">Destination</div>
+          <div style="border:0.5px solid var(--border); border-radius:8px; padding:8px; font-size:12px; color:var(--text-muted);">Start date</div>
+          <div style="border:0.5px solid var(--border); border-radius:8px; padding:8px; font-size:12px; color:var(--text-muted);">End date</div>
+        </div>
+        <div style="border:0.5px solid var(--border); border-radius:8px; padding:8px; font-size:12px; color:var(--text-muted); margin-bottom:12px;">Notes</div>
+        <div style="display:flex; gap:8px;">
+          <div style="background:var(--fill-brand); color:var(--on-brand); border-radius:8px; padding:8px 20px; font-size:12px;">Save</div>
+          <div style="font-size:12px; text-decoration:underline; align-self:center;">Cancel</div>
+        </div>
+      </div>
+
+      <!-- Delete confirm -->
+      <div style="background:var(--surface-1); border-radius:8px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-size:12px; color:var(--text-secondary);">Delete this trip?</div>
+        <div style="display:flex; gap:8px;">
+          <div style="border:0.5px solid var(--border-strong); border-radius:12px; padding:6px 14px; font-size:12px;">Cancel</div>
+          <div style="background:var(--fill-brand); color:var(--on-brand); border-radius:8px; padding:6px 14px; font-size:12px;">Confirm</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
