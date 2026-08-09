@@ -16,6 +16,11 @@ import { SensorProcessor } from "./sensor.processor";
 import { CostComputationService } from "./services/cost-computation.service";
 import { MapNavigationService } from "./services/map-navigation.service";
 import { SmartTicketingService } from "./services/smart-ticketing.service";
+import { RedisModule, REDIS_CLIENT } from "@app/shared";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
+import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
+import { APP_GUARD } from "@nestjs/core";
+import Redis from "ioredis";
 
 if (!process.env.MONGODB_URI) {
   throw new Error(`MONGODB_URI is required`);
@@ -23,6 +28,21 @@ if (!process.env.MONGODB_URI) {
 export const REDIS_URL = process.env.REDIS_URL;
 @Module({
   imports: [
+    RedisModule,
+    ThrottlerModule.forRootAsync({
+      inject: [REDIS_CLIENT],
+      useFactory: (redis: Redis) => ({
+        throttlers: [
+          {
+            name: "default",
+            ttl: 60000,
+            limit: 100,
+            blockDuration: 60000,
+          },
+        ],
+        storage: new ThrottlerStorageRedisService(redis),
+      }),
+    }),
     BullModule.forRootAsync({
       useFactory: () => {
         if (!REDIS_URL) {
@@ -66,6 +86,7 @@ export const REDIS_URL = process.env.REDIS_URL;
     CostComputationService,
     MapNavigationService,
     SmartTicketingService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class InjestionModule {}

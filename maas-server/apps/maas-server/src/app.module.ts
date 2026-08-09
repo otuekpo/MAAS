@@ -15,12 +15,16 @@ import { Payment, User } from "@app/database/pg-entities";
 import { JwtModule } from "@nestjs/jwt";
 import { EmailModule } from "@app/email";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
+import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
+import { RedisModule, REDIS_CLIENT } from "@app/shared";
 import { APP_GUARD } from "@nestjs/core";
+import Redis from "ioredis";
 import { JwtAuthGuard } from "@app/shared/guards";
 import { TripController } from "./trip.controller";
 import { TripService } from "./trip.service";
 import { AdminController } from "./admin.controller";
 import { AdminService } from "./admin.service";
+import { BruteForceService } from "./brute-force.service";
 
 if (!process.env.MONGODB_URI) {
   throw new Error(`MONGODB_URI is required`);
@@ -52,13 +56,20 @@ if (!process.env.MONGODB_URI) {
     ]),
     JwtModule,
     EmailModule,
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60000,
-          limit: 5,
-        },
-      ],
+    RedisModule,
+    ThrottlerModule.forRootAsync({
+      inject: [REDIS_CLIENT],
+      useFactory: (redis: Redis) => ({
+        throttlers: [
+          {
+            name: "default",
+            ttl: 60000,
+            limit: 100,
+            blockDuration: 60000,
+          },
+        ],
+        storage: new ThrottlerStorageRedisService(redis),
+      }),
     }),
   ],
   controllers: [AppController, TripController, AdminController],
@@ -66,6 +77,7 @@ if (!process.env.MONGODB_URI) {
     AppService,
     TripService,
     AdminService,
+    BruteForceService,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     JwtAuthGuard,
   ],

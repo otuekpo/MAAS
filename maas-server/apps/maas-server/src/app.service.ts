@@ -30,6 +30,7 @@ import { ResendConfirmationDto } from "./dto/resend-confirmation.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { GetOTPDto } from "./dto/get-otp.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
+import { BruteForceService } from "./brute-force.service";
 
 @Injectable()
 export class AppService {
@@ -37,6 +38,7 @@ export class AppService {
     @InjectRepository(User) private userRepository: Repository<User>,
     private jwtService: JwtService,
     @Inject(EMAIL_TOKEN) private readonly emailService: NewdevzEmail,
+    private readonly bruteForce: BruteForceService,
   ) {}
 
   getHello(): string {
@@ -45,6 +47,40 @@ export class AppService {
 
   getExpiryDate(): Date {
     return new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+  }
+
+  private bfKeys(prefix: string, email: string, ip?: string): string[] {
+    const keys = [`${prefix}:${email}`];
+    if (ip) {
+      keys.push(`${prefix}:ip:${ip}`);
+    }
+    return keys;
+  }
+
+  private async bruteForceGuard(prefix: string, email: string, ip?: string) {
+    for (const key of this.bfKeys(prefix, email, ip)) {
+      await this.bruteForce.guard(key);
+    }
+  }
+
+  private async recordBruteForceFailure(
+    prefix: string,
+    email: string,
+    ip?: string,
+  ) {
+    for (const key of this.bfKeys(prefix, email, ip)) {
+      await this.bruteForce.recordFailure(key);
+    }
+  }
+
+  private async resetBruteForceCounter(
+    prefix: string,
+    email: string,
+    ip?: string,
+  ) {
+    for (const key of this.bfKeys(prefix, email, ip)) {
+      await this.bruteForce.reset(key);
+    }
   }
 
   async get_user_details(userId: string) {
@@ -71,13 +107,16 @@ export class AppService {
     }
   }
 
-  async login({ email, password }: loginUserDto) {
+  async login({ email, password }: loginUserDto, ip?: string) {
     try {
+      await this.bruteForceGuard("login", email, ip);
+
       const user = await this.userRepository.findOne({
         where: { email },
       });
 
       if (user === null) {
+        await this.recordBruteForceFailure("login", email, ip);
         const apiResponse = createUnSuccessfulResponse(
           "A user with this email does not exist",
         );
@@ -111,11 +150,14 @@ export class AppService {
       const isPassword = await compare(password, user.password);
 
       if (isPassword === false) {
+        await this.recordBruteForceFailure("login", email, ip);
         const apiResponse = createUnSuccessfulResponse(
           "Incorrect email or password",
         );
         throw new HttpException(apiResponse, HttpStatus.UNAUTHORIZED);
       }
+
+      await this.resetBruteForceCounter("login", email, ip);
 
       const tokens = await this.generateToken(user.id, user.email, user.role);
 
@@ -491,7 +533,7 @@ export class AppService {
     }
   }
 
-  async forget_password_service(dto: GetOTPDto) {
+  async forget_password_service(dto: GetOTPDto, ip?: string) {
     try {
       if (!dto.email) {
         const apiResponse = createUnSuccessfulResponse(
@@ -500,11 +542,14 @@ export class AppService {
         throw new HttpException(apiResponse, HttpStatus.BAD_REQUEST);
       }
 
+      await this.bruteForceGuard("forgot-password", dto.email, ip);
+
       // dto.email = this.set_email_to_lowercase(dto.email);
 
       const user = await this.findOneByEmail(dto.email);
 
       if (!user) {
+        await this.recordBruteForceFailure("forgot-password", dto.email, ip);
         const apiResponse = createUnSuccessfulResponse(COMMENT.USER_NOT_FOUND);
         throw new HttpException(apiResponse, HttpStatus.BAD_REQUEST);
       }
@@ -523,6 +568,8 @@ export class AppService {
         throw new HttpException(apiResponse, HttpStatus.INTERNAL_SERVER_ERROR);
       }
 
+      await this.resetBruteForceCounter("forgot-password", dto.email, ip);
+
       const emailData: ResetPasswordEmailModel = {
         email: user.email,
         token,
@@ -538,7 +585,10 @@ export class AppService {
     }
   }
 
-  async reset_user_password_service(resetUserDTO: ResetPasswordDto) {
+  async reset_user_password_service(
+    resetUserDTO: ResetPasswordDto,
+    ip?: string,
+  ) {
     const { otp: token, newPassword } = resetUserDTO;
 
     if (!resetUserDTO.email || !token || !newPassword) {
@@ -551,6 +601,8 @@ export class AppService {
     // );
 
     try {
+      await this.bruteForceGuard("reset-password", resetUserDTO.email, ip);
+
       const user = await this.findOneByEmail(resetUserDTO.email);
       if (user === null) {
         const apiResponse = createUnSuccessfulResponse("User not found");
@@ -561,6 +613,11 @@ export class AppService {
         user.passwordResetToken === null ||
         user.passwordResetToken !== token
       ) {
+        await this.recordBruteForceFailure(
+          "reset-password",
+          resetUserDTO.email,
+          ip,
+        );
         const apiResponse = createUnSuccessfulResponse(
           "Password reset token is invalid or has already been used.",
         );
@@ -596,6 +653,12 @@ export class AppService {
         );
         throw new HttpException(apiResponse, HttpStatus.INTERNAL_SERVER_ERROR);
       }
+
+      await this.resetBruteForceCounter(
+        "reset-password",
+        resetUserDTO.email,
+        ip,
+      );
 
       return createResponse(true, "Password updated", true);
     } catch (error: any) {
