@@ -114,6 +114,7 @@ export class AppController {
     description: "Returns the authenticated user's profile information.",
   })
   @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 50, ttl: 10 * 60_000 } })
   @Get("details")
   async getDetails(@Req() req: any) {
     return await this.appService.get_user_details(req.user.id);

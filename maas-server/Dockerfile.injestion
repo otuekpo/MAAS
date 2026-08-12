@@ -4,11 +4,13 @@ WORKDIR /usr/src/app
 
 COPY package*.json nest-cli.json tsconfig*.json ./
 
+RUN npm ci
+
 COPY apps/injestion ./apps/injestion
 COPY libs/database ./libs/database
 COPY libs/shared ./libs/shared
 
-RUN npm ci
+
 
 RUN npx nest build injestion
 

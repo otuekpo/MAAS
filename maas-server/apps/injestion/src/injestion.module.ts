@@ -3,6 +3,8 @@ import { BullModule } from "@nestjs/bull";
 import { MongooseModule } from "@nestjs/mongoose";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import {
+  Logs,
+  LogsSchema,
   SensorEvents,
   SensorEventsSchema,
   Trips,
@@ -11,8 +13,9 @@ import {
 import { Payment, User } from "@app/database/pg-entities";
 import { InjestionController } from "./injestion.controller";
 import { InjestionService } from "./injestion.service";
-import { SENSOR_QUEUE } from "./injestion.constants";
+import { AUDIT_LOG_QUEUE, SENSOR_QUEUE } from "./injestion.constants";
 import { SensorProcessor } from "./sensor.processor";
+import { AuditLogProcessor } from "./audit-log.processor";
 import { CostComputationService } from "./services/cost-computation.service";
 import { MapNavigationService } from "./services/map-navigation.service";
 import { SmartTicketingService } from "./services/smart-ticketing.service";
@@ -66,6 +69,7 @@ export const REDIS_URL = process.env.REDIS_URL;
       },
     }),
     BullModule.registerQueue({ name: SENSOR_QUEUE }),
+    BullModule.registerQueue({ name: AUDIT_LOG_QUEUE }),
     TypeOrmModule.forRoot({
       type: "postgres",
       url: process.env.DATABASE_URL,
@@ -77,12 +81,14 @@ export const REDIS_URL = process.env.REDIS_URL;
     MongooseModule.forFeature([
       { name: Trips.name, schema: TripsSchema },
       { name: SensorEvents.name, schema: SensorEventsSchema },
+      { name: Logs.name, schema: LogsSchema },
     ]),
   ],
   controllers: [InjestionController],
   providers: [
     InjestionService,
     SensorProcessor,
+    AuditLogProcessor,
     CostComputationService,
     MapNavigationService,
     SmartTicketingService,
