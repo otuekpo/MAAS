@@ -8,6 +8,7 @@ import {
   ErrorResponseInterceptor,
   TrimInterceptor,
 } from "@app/shared/interceptors";
+import { ApiKeyGuard } from "@app/shared/guards";
 
 async function bootstrap() {
   const app = await NestFactory.create(InjestionModule);
@@ -24,6 +25,9 @@ async function bootstrap() {
     new ErrorResponseInterceptor(),
     new TrimInterceptor(),
   );
+
+  // Require a valid API key before any request is handled.
+  app.useGlobalGuards(new ApiKeyGuard("INGESTION_API_KEY"));
 
   app.setGlobalPrefix("api");
 
