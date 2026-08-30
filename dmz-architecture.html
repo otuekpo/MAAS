@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MaaS DMZ Architecture</title>
+<style>
+  :root {
+    --color-slate-dark: #141413;
+    --color-ivory-medium: #f0eee6;
+    --color-ivory-light: #faf9f5;
+    --color-cloud-medium: #b0aea5;
+    --color-cloud-dark: #87867f;
+    --color-stone: #cccbc8;
+    --color-oat-warm: #e3dacc;
+    --color-manilla: #f5e3c7;
+    --color-clay: #d97757;
+    --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --font-sans: Inter, system-ui, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--color-ivory-medium);
+    color: var(--color-slate-dark);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 48px 24px 80px; }
+  header { margin-bottom: 40px; }
+  h1 {
+    font-family: var(--font-sans);
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  header p { font-family: var(--font-serif); font-size: 18px; color: var(--color-cloud-dark); }
+  h2 {
+    font-family: var(--font-sans);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 40px 0 16px;
+  }
+  .diagram { background: var(--color-ivory-light); border: 1px solid var(--color-stone); border-radius: 24px; padding: 32px; }
+  .zone {
+    border-radius: 20px;
+    padding: 20px;
+    position: relative;
+  }
+  .zone h3 {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 14px;
+  }
+  .zone .tag { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--color-cloud-dark); }
+  #internet { background: var(--color-oat-warm); }
+  #dmz { background: var(--color-manilla); }
+  #internal { background: var(--color-oat-warm); }
+  .zone + .zone { margin-top: 16px; }
+  .services { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .svc {
+    background: var(--color-ivory-light);
+    border: 1px solid var(--color-stone);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .svc .name { font-family: var(--font-sans); font-weight: 600; font-size: 15px; }
+  .svc .ports { font-size: 12px; color: var(--color-cloud-dark); margin-top: 4px; }
+  .svc .ports b { color: var(--color-clay); font-weight: 600; }
+  .svc .note { font-size: 12px; color: var(--color-cloud-medium); margin-top: 2px; }
+  .edge {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-cloud-dark);
+    text-align: center;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 6px 0;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--color-ivory-light); border-radius: 12px; overflow: hidden; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--color-stone); }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-cloud-dark); }
+  tr:last-child td { border-bottom: none; }
+  td.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; }
+  .dmz-row { background: var(--color-manilla); }
+  .pill {
+    display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; padding: 2px 8px; border-radius: 6px;
+  }
+  .pill.dmz { background: var(--color-clay); color: #fff; }
+  .pill.int { background: var(--color-oat-warm); color: var(--color-slate-dark); }
+  footer { margin-top: 40px; font-size: 13px; color: var(--color-cloud-medium); font-family: var(--font-serif); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>MaaS — DMZ Architecture</h1>
+    <p>Network segmentation isolating internal services from public exposure.</p>
+  </header>
+
+  <h2>Topology</h2>
+  <div class="diagram">
+    <div class="zone" id="internet">
+      <h3>Internet <span class="tag">— End-Points: App/Website, Dashboard, Third Party systems</span></h3>
+    </div>
+    <div class="edge">▼ published host ports</div>
+    <div class="zone" id="dmz">
+      <h3>DMZ · maas-dmz <span class="tag">— public-facing, ports exposed</span></h3>
+      <div class="services">
+        <div class="svc"><div class="name">maas-server</div><div class="ports">PUB <b>4081</b> → 4081</div><div class="note">public REST API (auth, trips, admin)</div></div>
+        <!-- <div class="svc"><div class="name">ingestion</div><div class="ports">PUB <b>3001</b> → 3001</div><div class="note">sensor data ingest (x-api-key)</div></div> -->
+      </div>
+    </div>
+    <div class="edge">▼ dual-homed · no port exposure</div>
+    <div class="zone" id="internal">
+      <h3>Internal · maas-internal <span class="tag">— isolated, no published ports</span></h3>
+      <div class="services">
+        <div class="svc"><div class="name">postgres</div><div class="ports">none</div><div class="note">user &amp; payment data</div></div>
+        <div class="svc"><div class="name">mongodb</div><div class="ports">none</div><div class="note">trips, sensor events, logs</div></div>
+        <div class="svc"><div class="name">redis</div><div class="ports">none</div><div class="note">BullMQ broker, rate limiting</div></div>
+        <div class="svc"><div class="name">mongo-express</div><div class="ports">none</div><div class="note">admin UI — tunnel / exec only</div></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Port exposure — before → after</h2>
+  <table>
+    <thead>
+      <tr><th>Service</th><th>Network</th><th>Host port (before)</th><th>Host port (after)</th></tr>
+    </thead>
+    <tbody>
+      <tr class="dmz-row"><td>maas-server</td><td><span class="pill dmz">DMZ</span> + internal</td><td class="mono">4081</td><td class="mono">4081</td></tr>
+      <!-- <tr class="dmz-row"><td>ingestion</td><td><span class="pill dmz">DMZ</span> + internal</td><td class="mono">3001</td><td class="mono">3001</td></tr> -->
+      <tr><td>postgres</td><td><span class="pill int">internal</span></td><td class="mono">5432</td><td class="mono">—</td></tr>
+      <tr><td>mongodb</td><td><span class="pill int">internal</span></td><td class="mono">27017</td><td class="mono">—</td></tr>
+      <tr><td>redis</td><td><span class="pill int">internal</span></td><td class="mono">6379</td><td class="mono">—</td></tr>
+      <tr><td>mongo-express</td><td><span class="pill int">internal</span></td><td class="mono">8081</td><td class="mono">—</td></tr>
+    </tbody>
+  </table>
+
+  <footer>Defined in maas-services.yaml · maas-dmz + maas-internal bridge networks · DBs, cache &amp; admin tools are no longer reachable from the host or internet.</footer>
+</div>
+</body>
+</html>
