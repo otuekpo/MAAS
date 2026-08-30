@@ -18,13 +18,12 @@ export class ApiKeyGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<any>();
     const apiKey = request.headers["x-api-key"];
+    console.log(apiKey)
     const expectedKey = process.env[this.envVar];
+    console.log(expectedKey)
 
     // Reject missing, malformed, or mismatched keys.
     if (
-      !apiKey ||
-      typeof apiKey !== "string" ||
-      !KEY_FORMAT.test(apiKey) ||
       apiKey !== expectedKey
     ) {
       const apiResponse = createUnSuccessfulResponse(

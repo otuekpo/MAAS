@@ -27,7 +27,7 @@ async function bootstrap() {
   );
 
   // Require a valid API key before any request is handled.
-  app.useGlobalGuards(new ApiKeyGuard("INGESTION_API_KEY"));
+  app.useGlobalGuards(new ApiKeyGuard("INGESTION_API_KEY")); 
 
   app.setGlobalPrefix("api");
 
