@@ -91,11 +91,22 @@ async function main() {
   });
 
   const endpoint = `${url}/api/ingest`;
+
+  // The ingestion service requires this key.
+  const apiKey = process.env.INGESTION_API_KEY;
+  if (!apiKey) {
+    console.error("Missing INGESTION_API_KEY in the environment.");
+    process.exit(1);
+  }
+
   console.log(`Posting ${events} sensor event(s) to ${endpoint} for trip ${tripId}`);
 
   const response = await fetch(endpoint, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+    },
     body: JSON.stringify({ events: generated }),
   });
   

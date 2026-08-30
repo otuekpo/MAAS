@@ -15,12 +15,19 @@ import { Payment, User } from "@app/database/pg-entities";
 import { JwtModule } from "@nestjs/jwt";
 import { EmailModule } from "@app/email";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
-import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
+import { RedisModule, REDIS_CLIENT } from "@app/shared";
+import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
+import Redis from "ioredis";
+import { BullModule } from "@nestjs/bull";
 import { JwtAuthGuard } from "@app/shared/guards";
 import { TripController } from "./trip.controller";
 import { TripService } from "./trip.service";
 import { AdminController } from "./admin.controller";
 import { AdminService } from "./admin.service";
+import { BruteForceService } from "./brute-force.service";
+import { AuditLogInterceptor } from "./audit-log.interceptor";
+import { AUDIT_LOG_QUEUE } from "./audit-log.constants";
 
 if (!process.env.MONGODB_URI) {
   throw new Error(`MONGODB_URI is required`);
@@ -52,13 +59,42 @@ if (!process.env.MONGODB_URI) {
     ]),
     JwtModule,
     EmailModule,
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60000,
-          limit: 5,
-        },
-      ],
+    RedisModule,
+    BullModule.forRootAsync({
+      useFactory: () => {
+        const url = process.env.REDIS_URL;
+        if (!url) {
+          throw new Error(`REDIS_URL is required`);
+        }
+
+        return {
+          redis: url.startsWith("rediss://") ? { url, tls: {} } : url,
+          defaultJobOptions: {
+            attempts: 3,
+            backoff: {
+              type: "exponential",
+              delay: 5000,
+            },
+            removeOnFail: false,
+            timeout: 60000,
+          },
+        };
+      },
+    }),
+    BullModule.registerQueue({ name: AUDIT_LOG_QUEUE }),
+    ThrottlerModule.forRootAsync({
+      inject: [REDIS_CLIENT],
+      useFactory: (redis: Redis) => ({
+        throttlers: [
+          {
+            name: "default",
+            ttl: 60000,
+            limit: 100,
+            blockDuration: 60000,
+          },
+        ],
+        storage: new ThrottlerStorageRedisService(redis),
+      }),
     }),
   ],
   controllers: [AppController, TripController, AdminController],
@@ -66,6 +102,8 @@ if (!process.env.MONGODB_URI) {
     AppService,
     TripService,
     AdminService,
+    BruteForceService,
+    { provide: APP_INTERCEPTOR, useClass: AuditLogInterceptor },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     JwtAuthGuard,
   ],

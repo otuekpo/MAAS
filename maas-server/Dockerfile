@@ -4,12 +4,14 @@ WORKDIR /usr/src/app
 
 COPY package*.json nest-cli.json tsconfig*.json ./
 
+RUN npm ci
+
 COPY apps/maas-server ./apps/maas-server
 COPY libs/database ./libs/database
 COPY libs/shared ./libs/shared
 COPY libs/email ./libs/email
 
-RUN npm ci
+
 
 RUN npx nest build maas-server
 

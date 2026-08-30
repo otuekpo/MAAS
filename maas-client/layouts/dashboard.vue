@@ -53,6 +53,14 @@
           Admin
         </NuxtLink>
         <NuxtLink
+          v-if="isStaff"
+          to="/admin/activity"
+          class="rounded-buttons px-3 py-2 font-sans text-[12px] text-cloud-medium hover:text-slate-dark transition-colors duration-150"
+          @click="sidebarOpen = false"
+        >
+          Activity Log
+        </NuxtLink>
+        <NuxtLink
           to="/profile"
           class="rounded-buttons px-3 py-2 font-sans text-[12px] text-cloud-medium hover:text-slate-dark transition-colors duration-150"
           @click="sidebarOpen = false"
