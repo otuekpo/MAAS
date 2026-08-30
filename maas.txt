@@ -1,0 +1,580 @@
+Mobility as a Service (MaaS) Applications: a
+reference security architecture
+Valentina Casola
+Department of Electrical Engineering
+and Information Technologies
+University of Naples Federico II
+Naples, Italy
+casolav@unina.it
+Daniele Iorio
+Department of Electrical Engineering
+and Information Technologies
+University of Naples Federico II
+Naples, Italy
+daniele.iorio2@unina.it
+Abstract—In the modern era of transportation in urban envi-
+ronment, optimization of traffic is crucial. In the context of Smart
+Cities, Mobility as a Service (MaaS) is a revolutionary paradigm
+that offers integrated solutions to enhance urban mobility. The
+general goal is to develop a single digital hub that allows users
+to plan, book, and pay for their journeys, as well as gather
+data about public transport, their occupation, traffic, and other
+alternative modes of transportation (like e-mobility solutions, car
+sharing, bike sharing, etc.). In this context, security and privacy
+of data and infrastructures, are still open issues that may limit
+full adoption of these applications. In this paper, we propose a
+reference architecture to improve security in MaaS platforms. We
+present the initial design process to understand the requirements
+needed to cover all the characteristics of a MaaS system that
+defines a reference architecture; later, security analysis will be
+performed with a risk-based and threats-based approach. Finally,
+as a Proof of Concept, we will present an implementation of a case
+study to validate the security of the proposed solution suitable
+for a secure distributed MaaS application.
+Index Terms—Mobility as a Service, MaaS, Smart Mobility,
+Smart Cities, Intelligent Public Transportation System, Reference
+security architecture
+I. INTRODUCTION
+A Smart City (SC) is defined as “an urban area that uses
+technology and data-driven solutions to improve the quality
+of life for its residents, enhance operational efficiency, and
+address various challenges such as traffic congestion, waste
+management, energy consumption, and public services. It in-
+volves integrating information and communication technology
+(ICT) infrastructure to enable better communication between
+city systems and residents, resulting in increased sustainability,
+innovation, and overall well-being”1. It introduces the concept
+IoV (Internet of Vehicles) [1] intended as a network that
+links pedestrians, cars, and parts of urban infrastructure using
+several sensors, software, built-in hardware, and types of
+connection to enable reliable and continuous communication.
+As a part of a Smart City, IoV strives to make transportation
+more autonomous, safe, fast, and efficient. V2V (Vehicle-to-
+Vehicle) communication describes the inter-vehicle interaction
+[4]; similarly, V2X (Vehicle-to-Environment) draws the link
+between the vehicle and the rest of the infrastructure based
+1https://www.ibm.com/think/topics/smart-city
+on the DSRC (Dedicated Short-Range Communications) tech-
+nology allowing direct wireless exchange [14]. Everything
+is supported by Mobile Area Network (MAN), Wide Area
+Network (WAN) 5G technologies, GPS satellites, etc. as
+illustrated in Wu et al. [18].
+One of the pillars of Smart Cities is a system referred
+to as IPTS – Intelligent Public Transportation System [17].
+Available IPTS are often closed, technology driven, and there’s
+lack of best-practice and guidelines for their development.
+The scientific and industrial community is cooperating to
+build a domain specific architecture as generic as possible to
+be able to connect heterogeneous services, collect, store and
+analyse all the (near-)real-time information gathered from the
+environment and allow easy service extension. The target is
+to reduce traffic jams and CO2 emissions, and build a system
+that is integrated, federated and user-friendly, making cities
+more eco-friendly, liveable, and efficient.
+The main obstacle to the development of a network of
+multiple smart cities is the presence of hamlets populated
+by a few people, in which public transportation is generally
+absent. These small areas are often rural and have narrow
+streets, hence conventional private means of transport are
+preferred [3]. Currently, there are lots of projects founded by
+the European Union carrying out experiments in different cities
+to gather useful information about the environment to deploy
+a functional federated system.
+In the MaaS context, the term Reference Architecture is
+used to describe a blueprint and a starting point for the system
+architecture description. Crucial features are: i) cooperation
+between different types of MaaS, ii) modularity and flexibility
+in the composition of the system, and iii) adaptation to new
+law regulations and initiatives. However, in the literature there
+is still a lack of guidelines for users and architecture definition
+and of standards for data formatting, storing, manipulation, and
+sharing.
+Starting from these considerations, the goal of this work
+is to analyse the state-of-the-art of MaaS, to identify the
+main users and requirements of such application, choose
+the most suitable reference architecture (general enough to
+cope with the needs), and then perform a security and risk
+analysis to identify possible threats and related risks resulting
+2025 9th International Conference on Models and Technologies for Intelligent Transportation Systems (MT-ITS) | 979-8-3315-8063-6/25/$31.00 ©2025 IEEE | DOI: 10.1109/MT-ITS68460.2025.11223551
+Authorized licensed use limited to: IMT - Alti Studi Lucca. Downloaded on August 29,2026 at 12:29:44 UTC from IEEE Xplore. Restrictions apply.
+in designing a secure reference architecture. The outcome will
+be a prototype proposal of a security layer, showing a possible
+security and privacy enhancement.
+The structure of the paper is the following: in Section II, we
+present some related work to identify from the state of the art
+the requirements for the design of a reference architecture.
+In Section III, after the architecture definition, we present
+a detailed security analysis, from threat modelling to risk
+analysis, while, in Section IV, we present the security design
+of the architecture with identification of Security Controls.
+In Section V a case study is presented and evaluated to
+demonstrate the security of the provided solution and finally,
+in Section VI, some conclusions and future work is drawn.
+II. RELATED WORK AND SECURITY REQUIREMENTS
+ELICITATION
+At European level, the MaaS4EU project (2017-2020) [9]
+featured different partners across Europe with three pilot
+projects in Budapest, Greater Manchester, and Luxembourg
+outlining the basis of the development and integration of
+such technologies across the Continent. In Italy, there are
+three different ongoing projects: i) MaaS4Italy (2023-2026)2
+(financed by European Union in the context of the PNRR
+-Piano Nazionale di Ripresa e Resilienza- and Italia Dig-
+itale 2026 projects) aims at experiment MaaS environment
+in selected cities, build an open platform for mobility data
+collection and sharing, and enhance public transportation,
+ii) MOST – Sustainable Mobility National Research Centre3
+aims at enhancing sustainable mobility, iii) Borgo 4.0 project4
+aims at providing a secure integrated platform for sustainable
+management of infrastructure and optimization of traffic. This
+last project is currently developed in Lioni (near Avellino in
+Campania) where lots of renovation interventions have been
+made to introduce sensors, cameras, smart cross walks, and
+urban testing circuit (aiming the introduction of autonomous
+driving vehicles) making it the first research facility for experi-
+mentation in Italy. All these projects focused on functional and
+architectural aspects of MaaS platforms, few of them addresses
+the security problems that arise in data communication and
+elaboration including related privacy issues.
+In this section, we will describe the process that led to the
+definition of 32 high level requirements that are useful to drive
+the decision about the architecture to use. The analysis will en-
+counter functional and non-functional requirements to describe
+respectively system interaction with the environment and its
+measurable properties, security, and privacy requirements to
+allow system and data protection.
+A. Security requirements
+The requirement analysis starts from the definition of per-
+spectives, service types, and stakeholders interested in the
+system. As indicated in the context of the ReiseNavet5 project
+2https://innovazione.gov.it/progetti/mobility-as-a-service-for-italy/
+3https://www.centronazionalemost.it/eg/
+4https://www.borgo40.eu/en/
+5https://reisenavet.no/
+that produced the SINTEF report [16], there are 4 main
+perspectives to be considered to improve sustainable mobility,
+find a valuable business model, define stakeholders, and build
+a platform capable of data management. In this context,
+European projects like Mobility Data Space6 and Gaia-X7 [2]
+are crucial to provide a secure and transparent communication
+channel for data sharing in compliance with GDPR (General
+Data Protection Regulation).
+Furthermore, different service types considered are related
+to the crucial concepts of flexibility and interoperability, since
+different providers can issue the system, they can rely on third
+party services, and federate the system facilitating roaming.
+In the MaaS ecosystem there is no standard definition of
+involved actors names yet, but in the cited report there is an
+indication of a set of generic roles that represent stakeholder
+archetypes with non-overlapping responsibilities with some
+connected to the ISO Technical Report 7878. Finally, 18 actors
+are defined, divided into primary, secondary, and tertiary.
+After collecting and merging the results of this analysis, it is
+possible to define the final list of requirements. From SINTEF
+work, 13 functional and non-functional requirements emerge,
+8 more have been defined in Di Martino et al. [17] while in
+Callegati et al. [5] there is no explicit requirement definition,
+but there are interesting inputs about federation, interaction,
+modularity, and data storage, sharing, and analysis. To define
+security and privacy requirements, form Callegati et al. [6]
+emerge principles of data and service protection (since the
+system is built using a microservice architecture), while Cottril
+et al. [10], MaaS4EU [9], and Gaia-X [2] works have been
+used to investigate privacy concerns and Data Sovereignty
+Constraints. Furthermore, Casola et al. [12] introduces threat-
+driven approach to perform a security analysis on a MaaS
+architecture while [11] explores privacy and security issues.
+Table I summarizes the results of the research and the
+subsequent harmonization process to avoid overlapping, giving
+an ID, a formal description and a letter to define if it is
+functional (F), non-functional (NF), security (S), or privacy
+(P) related.
+B. Reference architectures, state of the art
+Currently, available architectures are not general enough
+to be used in the MaaS environment because of the strong
+connection to the IoT environment pervading Smart Cities.
+Starting from the previous requirement analysis, a comparison
+process is needed to define benefits and limitations, leading to
+the choice of which of the available architectures can be the
+blueprint.
+Traditional IoT systems architectures were first assessed
+for their similitude to MaaS architectures, but they are not
+suitable for MaaS purposes since they do not provide explicit
+support for the key concept of IPTS. Furthermore, sensors
+are built by different vendors, thus have distinctive data
+format, are mobile, and produce a massive amount of data
+6https://mobility-dataspace.eu/
+7https://gaia-x.eu/
+Authorized licensed use limited to: IMT - Alti Studi Lucca. Downloaded on August 29,2026 at 12:29:44 UTC from IEEE Xplore. Restrictions apply.
+TABLE I: Final requirement list
+Code Formal description Classification
+MR001 The system shall acquire information from multiple
+and heterogeneous spatio-temporal data sources. F
+MR002 The system shall connect to multiple third-party data
+sources of interest. F
+MR003 The system shall have internal storage and management
+capabilities for massive spatio-temporal data. NF
+MR004 The system shall support multiple data processing paradigms,
+both in batch and stream. F
+MR005
+The system shall have loose coupling of internal components,
+to enable future addition and/or
+replacement of components/services.
+NF
+MR006
+The system shall provide interoperability with external
+services/applications, by means of standard
+communication protocols.
+NF
+MR007 The system shall introduce scalability, with respect to the
+number of active IoT/IoV devices. NF
+MR008 The system shall exploit edge computing resources. NF
+MR009 The system shall publish standardized data via NAPs made
+available through European mobility data spaces. F
+MR010 The system shall provide generic support for
+the establishment of MaaS. NF
+MR011 The system shall follow common principles for fair
+collaboration and privacy protection. NF
+MR012 The system shall integrate standardized services providing
+information on their use. NF
+MR013 The system shall publish standardized data on all
+transport services. NF
+MR014
+The system shall provide complete travel planning services
+with all types of transport services as generic booking and
+standardized payment services.
+NF
+MR015
+The system shall be able to verify a process in terms of actors
+(or services) involved, their actions and their relationship
+with one another.
+S
+MR016 The system shall be able to hold its actor (or service)
+accountable for its actions in a process. S
+MR017
+The system shall have the ability to maintain information
+for an extended period of time.
+This is essential for applications run in an enterprise system.
+S
+MR018
+The system shall allow users to customize it by
+setting metadata such as time, events of recording,
+and the granularity of provenance.
+S
+MR019 The system shall have a rating scheme in place as a possible
+implementation for trustworthiness evaluation mechanisms. S
+MR020
+The system shall possess service trustworthiness in
+order to mitigate against opportunities for a malicious insider
+to succeed in registering a rogue service.
+S
+MR021 The system shall provide input sanitization to protect
+applications from most of the malicious invocations. S
+MR022 The system shall incorporate the Privacy by Design principles. P
+MR023 The system shall determine ways to minimize collection of
+data where possible. P
+MR024 The system shall appoint a Data Protection Officer. P
+MR025
+The system shall be structured to incorporate the concept
+of Demilitarized Zone
+isolating the rest of the system.
+S
+MR026 The system shall utilize only secured protocols and
+ports in communication in order to ensure security of data. S
+MR027
+The system shall ensure that all users become aware of the
+terms and conditions of the privacy policy giving
+control over the information.
+P
+MR028
+The system shall provide the capability to the users to opt
+out from using the application or withdraw any permission
+that may have been granted through the app.
+P
+MR029 The system shall ensure that customers’ payment related
+info is not saved together with info related to the MaaS. P
+MR030 The system shall ensure strong password policies and procedures
+and exploit multi-factor authentication in password reset situations. S
+MR031
+The system shall use suitable anonymization techniques in
+order to ensure personal data is differentiated from
+the data subject and avoid the risk of re-identification.
+P
+MR032 The system shall provide a logging mechanism for
+accountability and auditing purposes. S
+to be managed. Generally, these systems rely on three-to-
+five generic layers top-down architecture including perception,
+network, application, service, and business [13].
+The SMAll (Smart Mobility for All) system presented by
+the University of Bologna [5] addresses the issue of Multi-
+modal travelling. In the beginning, it introduces the definition
+of the MaaS Stack composed of three tiers in turn composed of
+four macro-layers built on top of each other. The application
+is microservice oriented and introduces crucial concepts of
+dynamic and static federation respectively, allowing service
+Fig. 1: IPTS architecture
+trading and agreement definition on secure and reliable inter-
+communication technologies between services.
+An interesting IPTS system is presented as a collaboration
+between Hitachi Rail and University Federico II of Naples
+[17]. The approach used is divided in steps. First thing
+first, the operating environment is defined, introducing core
+components: i) Data Producers (under direct control of IPTS)
+i.e., collections of sensors IoT and IoV able to collect data
+from the environment and provide them to the system, ii) Third
+Party Data/Service Providers i.e., platform that lies outside
+the architecture boundary with which the IPTS interacts to
+gather environment information (GAIA-X European Cloud,
+Mobility Data Spaces, National Access Points - NAPs), iii)
+Back End i.e., the execution platform (local server farm or
+Cloud infrastructure) on which the core part of the IPTS is
+intended to be executed, iv) End Points i.e., collection of
+different users, decision makers, third-party software solutions,
+and IoT systems. Afterwards, the architecture is detailed with
+the description of the subsystems shown in Fig. 1.
+Since this architecture is data-oriented allowing interaction
+of multiple data sources, modular thanks to the operating
+environment, and already publicly deployed and operated by
+Hitachi Rail itself, it is the most suitable architecture to
+start with our analysis. From now on, the focus will be on
+improving its security, implementing the Security Subsystem
+as a security layer between the system API and the endpoints.
+III. SECURITY ANALYSIS
+Main security goals of this proposal are Confidentiality,
+Integrity, and Availability (CIA) and privacy protection of data
+and assets involved in the architecture. They can be addressed
+using different available and well known technologies and
+techniques.
+Authorized licensed use limited to: IMT - Alti Studi Lucca. Downloaded on August 29,2026 at 12:29:44 UTC from IEEE Xplore. Restrictions apply.
+By choosing the reference architecture, and following
+the Secure Software Development Lifecycle (SSDL), we can
+clearly identify the critical assets and communication employ-
+ing Microsoft Threat Modelling Tool8 to provide a model
+of the system and identify relevant threats according to the
+STRIDE approach. The resulting security hazards are then
+evaluated with a Risk Analysis approach, aimed at computing
+the risk as Likelihood ∗ Impact sticking to OWASP Risk Rat-
+ing Methodology9. Likelihood is intended as a rough measure
+of how likely the vulnerability is to be uncovered and exploited
+by an attacker, while Impact is the evaluation of the effect of
+a successful attack on the system (business, reputation, etc.).
+The value can be computed employing tools like OWASP Risk
+Rating Calculator10.
+Starting from the layout presented in Fig. 1, the system
+analysis consists in creating a first model of the MaaS ar-
+chitecture without any security layer, evaluating it to identify
+security controls to enforce. It will later be compared with a
+second model that will include all the identified controls, to
+demonstrate the overall enhancement due to the introduction
+of proper countermeasures.
+Threat family name Stride category Identified threat
+number
+Source & Destination
+Spoofing S 21
+Authenticated Dataflow
+Compromised T 28
+Collision Attack &
+Replay Attack T 15
+SQL Injection T 8
+Potential Data Repudiation R 38
+Weak Authentication
+Scheme & Access Control, I 11
+Weak Credential Storage I 20
+Denial of Service &
+Potential Process Crash D 87
+Elevation Using
+Remote Code Execution E 25
+Elevation Using
+impersonation E 59
+TABLE II: Identified threat families
+The first analysis highlights a total of 312 threats distributed,
+for simplicity’s sake, in the ten different families (Tab. II). Of
+all of them, 53 are already mitigated (due to the technologies
+used to implement the subsystems) and 126 are not applicable.
+Thereafter, the risk computation is carried out, showing an
+overall medium-high risk level.
+IV. SECURITY DESIGN OF A MAAS ARCHITECTURE
+Given the static analysis provided, it is crucial to identify
+security controls that must be implemented to reach the
+desired security level following the NIST Control Framework
+[15]. This mapping process is carried out by assigning risk
+to each subfamily performing a Per-Asset Security Controls
+8https://learn.microsoft.com/en-us/azure/security/develop/
+threat-modeling-tool
+9https://owasp.org/www-community/OWASP Risk Rating Methodology
+10https://owasp-risk-rating.com/
+Identification; whereupon the Per-System Security Controls
+Identification is performed by evaluating the need for addi-
+tional security controls at each asset of the system due to the
+relationships existing among its components [7], [8].
+A. Security control identification
+To design the security controls needed to mitigate the
+emerged threats, we referred to the NIST 800-53 security
+baseline rev. 511 of which 20 control families, the following
+5 are relevant for this proposal and accordingly detailed:
+Access Control (AC) (handles access to the system and
+its information), Audit and Accountability (AU) (handles
+the collection and analysis of information related to system
+activity), Identification and Authentication (IA) (handles
+identification and authentication of users and devices connect-
+ing to the system), System and Communications Protection
+(SC) (handles network protection including cryptography to
+protect transmitted information), and System and Information
+Integrity (SI) (handles integrity protection of the system
+and of the information avoiding unauthorized manipulation
+and mitigating malware threats). Each family provides many
+controls, of these, only a subset is applicable. Table III shows
+a summary of the applicable controls for each family with the
+required implementation level and related responsibilities.
+Family ID Applicable
+controls
+Required
+level Responsibilities
+AC 10/25 High
+Account management
+Access Enforcement
+Separation of Duties
+AU 12/16 Mid/High
+Event Logging
+Report and Alert Generation
+Non-repudiation
+IA 6/12 High User identification
+Authentication Feedback
+SC 17/51 High
+Separation of System User
+functionalities
+DoS, Boundary, and
+Cryptographic protection
+SI 9/23 Mid/High
+Malicious Code and
+Spam protection
+System Monitoring
+Error Handling
+Memory Protection
+TABLE III: Applicable control families
+Given the previous static analysis, it is important to notice
+that each control must be enforced at a medium/high level.
+Once applicable NIST controls have been identified, we traced
+them with the corresponding asset and the 10 cited threat
+families to define proper configuration.
+V. CASE STUDY AND EVALUATION
+In this section, we present a case study on the secure
+layer and its effectiveness, providing results of a new security
+analysis.
+11https://csrc.nist.gov/pubs/sp/800/53/b/upd1/final
+Authorized licensed use limited to: IMT - Alti Studi Lucca. Downloaded on August 29,2026 at 12:29:44 UTC from IEEE Xplore. Restrictions apply.
+Fig. 2: MaaS4You secure architecture
+A. Prototype description
+Since the focus is to match the security and privacy re-
+quirements previously identified, Fig. 2 highlights in red the
+components that are set up by the prototype: “Map navigation”
+and “Cost computation” are mock-ups for services offered by
+”Service subsystem” while “App/Website” is the endpoint with
+which users interface in the system.
+The prototype, called “MaaS4You”, is developed as a Client-
+Server using the Model View Controller (MVC) approach
+to build the architecture and Data Transfer Object (DTO)
+to allow data sharing between entities. The JAVA language
+has been used in the context of the Spring Boot framework,
+allowing mapping between wrappers and implemented classes
+granting secure extraction of data. Finally, to build the web
+pages, Thymeleaf template is used granting wide compatibility
+(refer to the MaaS4You GitHub repository12 for further
+details).
+There are two different types of actors: i) User that, after
+authentication, manages the lifecycle of a trip, and visualize
+the list of all his reservations, and ii) Administrator that can
+perform the same actions, but can also list all the planned
+journeys in the system. The cost of the trip will automatically
+be computed based on the chosen mean of transport.
+To comply with the control-threat trace outlined in Sec-
+tion IV-A, we decided to use the following technologies
+to implement the Security Layer: i) Keycloak13 for Identity
+and Access Management (IAM), ii) HashiCorp Vault14 for
+identity-based secret and encryption management, iii) Ng-
+inX15 in combination with OpenSSL16 for adoption of proxy
+and secure communications over the network, iv) Docker17
+12https://github.com/IorioD/Maas4You
+13https://www.keycloak.org/
+14https://www.hashicorp.com/en/products/vault
+15https://nginx.org/en/
+16https://www.openssl.org/
+17https://www.docker.com/
+Fig. 3: Modified secure system model
+for system containerization. Furthermore, Content Security
+Policies (CSPs)18 are used to mitigate Cross-Site Scripting
+(XSS), OWASP Enterprise Security API (ESAPI)19 are used
+to perform input sanitization, an internal logging mechanism is
+implemented via Apache Commons Logging library. Finally,
+a token-based mechanism is used to verify the source of a
+web page defining cross-site or same-site domain attribute to
+mitigate Cross-Site Request Forgery (CSRF).
+B. Security evaluation
+To carry out the second security analysis, we provide a new
+model, of which Fig. 3 shows the security subsystem.
+The results highlight a total of 369 treats, of which 106 are
+already mitigated and 153 are not applicable. Comparing this
+numbers with the previous ones, we observe that total number
+of threats is apparently higher since the attack surface is wider
+due to the introduction of more assets, but the remaining ones
+are mitigated using the proposed security mechanisms.
+To conclude the analysis, we report the list of implemented
+requirements describing the corresponding coverage level:
+1) MR014: partially covered with trip planning and cost
+computation.
+2) MR015: fully covered with the use of Keycloak IAM.
+3) MR016: fully covered with the internal logging mecha-
+nism.
+4) MR018: partially covered with the user personal profile
+page.
+5) MR021: fully covered using the OWASP ESAPI.
+6) MR022: partially covered using Spring Boot framework
+mechanism to extract hashed data.
+7) MR026: fully covered using NginX combined with
+OpenSSL certificates and Dockerization.
+18https://owasp.org/www-community/controls/Content Security Policy
+19https://owasp.org/www-project-enterprise-security-api/
+Authorized licensed use limited to: IMT - Alti Studi Lucca. Downloaded on August 29,2026 at 12:29:44 UTC from IEEE Xplore. Restrictions apply.
+8) MR027: fully covered by the displaying of a “terms and
+condition” page right after the login.
+9) MR028: fully covered by the display of a “terms and
+condition” page with the opt-in/out selection.
+10) MR030: fully covered with Keycloak granting password
+policies definition, brute force attack protection, and
+2FA.
+11) MR032: fully covered with the implementation of the
+internal logging mechanism, tracing actions performed
+in the system.
+Since the prototype is installed on a local machine, it im-
+plements 7/11 security requirements, 3/7 privacy requirements,
+and 1 Non-functional for a total of 11/32.
+Further investigations show that the proposed security layer
+implements 90% of AC, 42% of AU, 83% of IA, 88% of
+SC, and 44% of SI controls identified in Tab. III. Moreover,
+the overall system risk level is lowered from medium/high
+to medium/low with significant improvements emerging in
+mitigation of Weak Access Control and Denial of Service since
+related risk value decrease from high to low.
+VI. CONCLUSIONS AND FUTURE WORKS
+The MaaS concept represents a huge change in the way
+cities and mobility solutions are intended: integrated, efficient,
+and sustainable transport solutions are the intended objective.
+This work shows the steps that form a state-of-the-art anal-
+ysis allow the definition of 32 requirements used to identify
+the main need of a possible reference architecture. From
+the related works, different architectural solutions have been
+identified from which emerge crucial themes like modularity,
+scalability, along with interface and data standardization to
+build a robust and integrated system. Ultimately, based on the
+outcomes of the security analysis, a potential implementation
+of a security layer emerges employable on different systems
+with appropriate customization; it provides a medium/high
+level of security for the identified threats.
+The presented results have been submitted to Hitachi se-
+curity experts, showing that the provided risk-based security
+analysis will be taken in consideration for further improve-
+ment. Furthermore, it proposes security controls extensions
+and possible integration with new technologies to deploy
+additional security and privacy aspects. The integration pro-
+cess will be possible only after proper implementation and
+configuration with their existing architecture.

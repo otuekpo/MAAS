@@ -1,12 +1,17 @@
+# DMZ topology:
+#   maas-dmz       - public-facing network. Only services that must be
+#                    reachable from the internet publish host ports.
+#   maas-internal  - isolated network with NO published ports. Databases,
+#                    caches, and admin tools live here and are unreachable
+#                    from the host/internet. App services are dual-homed so
+#                    they can reach internal resources by service name.
 services:
 
-  # POSTGRES
+  # POSTGRES (internal only)
   postgres:
     image: "postgres:latest" #18
     networks:
-      - maas
-    ports:
-      - 5432:5432
+      - maas-internal
     environment:
       POSTGRES_USER: username
       POSTGRES_PASSWORD: password
@@ -19,17 +24,15 @@ services:
       timeout: 5s
       retries: 5
 
-  # MONGODB
+  # MONGODB (internal only)
   mongodb:
       image: mongodb/mongodb-atlas-local
       networks:
-        - maas
+        - maas-internal
       hostname: mongodb
       environment:
         - MONGODB_INITDB_ROOT_USERNAME=user
         - MONGODB_INITDB_ROOT_PASSWORD=pass
-      ports:
-        - 27017:27017
       volumes:
         - ./init:/docker-entrypoint-initdb.d
         - mongodb_data:/data/db
@@ -39,33 +42,29 @@ services:
         test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
 
 
-  # MONGODB CLIENT
+  # MONGODB CLIENT (admin tool, internal only)
   mongo-express:
     container_name: mongo-express
     image: mongo-express
     networks:
-      - maas
+      - maas-internal
     depends_on:
       mongodb:
         condition: service_healthy
     environment:
-      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_SERVER=mongodb
       - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
       - ME_CONFIG_MONGODB_ADMINPASSWORD=password
       - ME_CONFIG_BASICAUTH_USERNAME=admin
       - ME_CONFIG_BASICAUTH_PASSWORD=password
-    ports:
-      - '8081:8081'
     volumes:
       - ./mongo-data:/data/db
 
-  # REDIS
+  # REDIS (internal only)
   redis:
     image: redis:7-alpine
     networks:
-      - maas
-    ports:
-      - 6379:6379
+      - maas-internal
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -73,13 +72,14 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # MAAS SERVER
+  # MAAS SERVER (DMZ: public API, dual-homed to internal network)
   maas-server:
     build:
       context: ./maas-server
       dockerfile: Dockerfile
     networks:
-      - maas
+      - maas-dmz
+      - maas-internal
     ports:
       - "4081:4081"
     environment:
@@ -95,13 +95,14 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # INJESTION SERVICE
+  # INJESTION SERVICE (DMZ: public sensor ingest, dual-homed to internal)
   injestion:
     build:
       context: ./maas-server
       dockerfile: Dockerfile.injestion
     networks:
-      - maas
+      - maas-dmz
+      - maas-internal
     ports:
       - "3001:3001"
     environment:
@@ -128,5 +129,9 @@ volumes:
   pg-data:
 
 networks:
-  maas:
+  # Public-facing zone. Only DMZ services attach here and publish host ports.
+  maas-dmz:
+    driver: bridge
+  # Isolated zone. No published ports; reachable only by dual-homed DMZ apps.
+  maas-internal:
     driver: bridge
