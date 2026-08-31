@@ -14,6 +14,7 @@ Practices guide and the MaaS reference security architecture.
 
 - [Prerequisites](#prerequisites)
 - [Project layout](#project-layout)
+- [Tech stack](#tech-stack)
 - [Running the backend stack](#running-the-backend-stack)
 - [Running the frontend client](#running-the-frontend-client)
 - [Services](#services)
@@ -43,6 +44,22 @@ Practices guide and the MaaS reference security architecture.
 | `maas-client/` | Frontend: web application (Nuxt) |
 | `maas-services.yaml` | Docker Compose definition for the backend stack |
 | `maas.txt` | The MaaS reference security architecture paper this project is based on |
+
+## Tech stack
+
+| Layer | Technology | Version | Notes |
+|---|---|---|---|
+| Frontend | [Nuxt 3](https://nuxt.com/) + Vue 3 | Nuxt `^3.21`, Vue `^3.5` | Web application (client) |
+| Styling | [Tailwind CSS](https://tailwindcss.com/) | `^6.14` (`@nuxtjs/tailwindcss`) | Custom design-token theme (ivory/clay palette, serif + sans typography) |
+| Backend | [NestJS](https://nestjs.com/) (Node.js) | `^11.0` (Node 20+) | Restructured as two services: `maas-server` (API) and ingestion |
+| Relational data | [PostgreSQL](https://www.postgresql.org/) + [TypeORM](https://typeorm.io/) | PostgreSQL latest; TypeORM `^11.0`, `pg` `^8.22` | Users, payments |
+| Document data | [MongoDB](https://www.mongodb.com/) + [Mongoose](https://mongoosejs.com/) | Mongodb Atlas local; Mongoose `^9.8` | Trips, sensor events, audit logs |
+| Cache / broker | [Redis](https://redis.io/) + [BullMQ](https://bullmq.io/) | Redis `7` (alpine); Bull `^4.16`, `@nestjs/bull` `^11.0` | Rate limiting, brute-force tracking, background job queues |
+| Email | Nodemailer (SMTP) | `^9.0` | Confirmation & password-reset flows |
+| API docs | [Swagger](https://swagger.io/) | `@nestjs/swagger` `^11.4` | Auto-generated at `/docs` |
+| Auth | JWT + bcrypt | `@nestjs/jwt` `^11.0`, bcrypt `^6.0` | Session tokens, password hashing |
+| Validation | class-validator / class-transformer | `^0.15` / `^0.5` | Centralized DTO validation |
+| Containerization | [Docker](https://www.docker.com/) + Docker Compose | — | DMZ / internal network isolation |
 
 ## Running the backend stack
 
